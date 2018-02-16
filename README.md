@@ -11,8 +11,9 @@ backend](https://www.vaultproject.io/docs/configuration/storage/index.html). You
 ## Create a local CA Cert & Keys
 * [private-tls-cert](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert): Generate a private TLS certificate for use with a private Vault cluster. This is done to ensure that we need to accept the ca cert only once, and subsequent integration with the Vault does not warn for https.
 
-  Store the generated certs and keys on local file system.
-
+  Store the generated certs and keys on _**local**_ file system.
+ **TBD**: Avoid this, and automate generation of ca auth and signed certs after image creation. That would avoid having to create the certs offline first. Perhaps store the certs in Vault.
+ 
 all the builds and development is done ubuntu bash shell running on windows 10 natively using Atom Editor - ** yay! **
 
 ## Packer Image, How it is built ?
@@ -26,10 +27,18 @@ Steps executed are as below for building the packer image
   $ vault-consul-ami\scripts\build.sh vault-consul-ami base packer.ignore
   ```
   Build script above takes three parameters
+
+
   (1) Directory to compare the SHA signature from, this directory should contain all the configuration files for the packer build.
   In above example it is vault-consul-ami
+
+
   (2) name of the image as json file. IN above example it is base[.json]
-  (3) packer.ignore file contains all secrets such aws keys et. al. packer.ignore contents look like below ```json
+
+
+  (3) packer.ignore file contains all secrets such aws keys et. al. packer.ignore contents look like below
+
+  ```
   {
   "aws_access_key_id" : "XXXXXXXXXXXXXXXX",
   "aws_secret_access_key" : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -46,10 +55,9 @@ Steps executed are as below for building the packer image
 - **Generated certs are subsumed into guest OS.**
 
 
- [update-certificate-store](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/update-certificate-store): Add a trusted, CA public key to an OS's
-  certificate store. This allows you to establish TLS connections to services that use this TLS certs signed by this CA without getting x509 certificate errors.
+ [update-certificate-store](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/update-certificate-store): Add a trusted, CA public key to an OS's certificate store. This allows you to establish TLS connections to services that use this TLS certs signed by this CA without getting x509 certificate errors.
 
-- **Image is built, Image is timestamped, versioned and certs are transferred over. **
+- **Image is built, Image is time-stamped, versioned and certs are transferred over. **
 
 Uses a
  [Packer](https://www.packer.io/) template to create a Vault
