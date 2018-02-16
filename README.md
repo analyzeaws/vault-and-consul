@@ -17,13 +17,14 @@ backend](https://www.vaultproject.io/docs/configuration/storage/index.html). You
 
 Steps executed are as below for building the packer image
 
-* **Generated certs are subsumed into guest OS.**
+- **Generated certs are subsumed into guest OS.**
 
 
  [update-certificate-store](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/update-certificate-store): Add a trusted, CA public key to an OS's
   certificate store. This allows you to establish TLS connections to services that use this TLS certs signed by this CA without getting x509 certificate errors.
 
 - **Image is built, Image is timestamped, versioned and certs are transferred over. **
+
 Uses a
  [Packer](https://www.packer.io/) template to create a Vault
  [Amazon Machine Image (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html), and
@@ -31,6 +32,8 @@ Uses a
  Both the images are provied same suffix based on the the timestamp image was created.
  Image have tag containing the SHA from git repository as an integrity marker.
  Image integrity is determined by comparing the SHA of git *-vis-a-vis-* SHA of image.
+
+ 
 - **Image pulls & installs vault and consul from Hashicorp github **
 
  [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault):
