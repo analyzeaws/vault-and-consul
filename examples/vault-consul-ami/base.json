@@ -1,0 +1,150 @@
+{
+  "_readme": [
+    "An Ubuntu 16.04 AMI that has Vault and Consul installed. ",
+    "Ubuntu 16.04 (xenial) LTS",
+    "AMI: amd64 hvm:ebs-ssd",
+    "     see the *_ami variables below for specific names",
+    "*_ami should be latest Ubuntu AMI",
+    "curl -sSL 'https://cloud-images.ubuntu.com/query/xenial/server/released.current.txt' | grep us-east-1 | grep hvm | grep -e 'ebs' | awk '{print $8;}'",
+    ""
+  ],
+  "description": "Packs An Ubuntu 16.04 AMI that has Vault and Consul installed image on AWS and Azure with vault, consul, apt-transport-https, curl, unzip, zip and jq",
+
+  "builders": [
+    {
+      "ami_description": "{{user `ami_name`}} Ubuntu AMI",
+      "ami_name": "{{user `ami_name`}}-ubuntu-1604 {{user `ami_time`}}",
+      "ami_regions": [
+        "us-east-1"
+      ],
+      "instance_type": "t2.micro",
+      "name": "ubuntu16-ami",
+      "region": "{{user `aws_region`}}",
+      "run_tags": {
+        "ami-create": "{{user `ami_name`}}"
+      },
+      "source_ami": "{{user `ami_base`}}",
+      "ssh_username": "ubuntu",
+      "tags": {
+        "Vault":"Yes",
+        "Consul":"Yes",
+        "OS_Name": "Ubuntu",
+        "OS_Version": "16.04",
+        "SHA": "{{user `ami_sha`}}",
+        "AMI": "{{user `ami_name`}}"
+      },
+      "type": "amazon-ebs",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}"
+    },
+    {
+      "ami_description": "{{user `ami_name`}} Amazon Linux AMI",
+      "ami_name": "{{user `ami_name`}}-amazon {{user `ami_time`}}",
+      "instance_type": "t2.micro",
+      "name": "amazon-linux-ami",
+      "region": "{{user `aws_region`}}",
+      "type": "amazon-ebs",
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "architecture": "x86_64",
+          "name": "*amzn-ami-hvm-*",
+          "block-device-mapping.volume-type": "gp2",
+          "root-device-type": "ebs"
+        },
+        "owners": ["amazon"],
+        "most_recent": true
+      },
+      "ssh_username": "ec2-user"
+    }
+  ],
+  "post-processors": [
+    {
+      "output": "manifest-base.json",
+      "strip_path": true,
+      "type": "manifest"
+    }
+  ],
+  "provisioners": [
+    {
+      "inline": [
+        "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo 'Waiting for cloud-init...'; sleep 1; done"
+      ],
+      "type": "shell"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo locale-gen en_US.UTF-8 || true",
+        "sudo update-locale LANG=en_US.UTF-8",
+        "sudo DEBIAN_FRONTEND=noninteractive apt-get -y update",
+        "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install apt-transport-https curl unzip zip jq git"
+      ],
+      "only": ["ubuntu16-ami"]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo yum install -y curl unzip zip jq git"
+      ],
+      "only": ["amazon-linux-ami"]
+    },
+    {
+      "type": "file",
+      "source": "{{user `ca_public_key_path`}}",
+      "destination": "/tmp/ca.crt.pem"
+    },
+    {
+      "type": "file",
+      "source": "{{user `tls_public_key_path`}}",
+      "destination": "/tmp/vault.crt.pem"
+    },
+    {
+      "type": "file",
+      "source": "{{user `tls_private_key_path`}}",
+      "destination": "/tmp/vault.key.pem"
+    },
+    {
+      "inline": [
+        "git clone --branch {{user `vault_module_version`}} https://{{user `github_oauth_token`}}@github.com/hashicorp/terraform-aws-vault.git ~/vault",
+        "git clone --branch {{user `consul_module_version`}} https://{{user `github_oauth_token`}}@github.com/hashicorp/terraform-aws-consul.git ~/consul",
+        "sleep 30s",
+        "~/vault/modules/install-vault/install-vault --version {{user `vault_version`}}",
+        "sudo mv /tmp/ca.crt.pem /tmp/vault.crt.pem /tmp/vault.key.pem /opt/vault/tls/ && sudo chown -R vault:vault /opt/vault/tls && sudo chmod -R 600 /opt/vault/tls && sudo chmod 700 /opt/vault/tls",
+        "sudo ~/vault/modules/update-certificate-store/update-certificate-store --cert-file-path /opt/vault/tls/ca.crt.pem",
+        "~/consul/modules/install-consul/install-consul --version {{user `consul_version`}}",
+        "~/consul/modules/install-dnsmasq/install-dnsmasq"
+      ],
+      "type": "shell"
+    },
+    {
+      "scripts": [
+        "{{template_dir}}/tasks/baseline.sh"
+      ],
+      "type": "shell",
+      "only": ["ubuntu16-ami"]
+    },
+    {
+      "scripts": [
+        "{{template_dir}}/tasks/cleanup.sh",
+        "{{template_dir}}/tasks/debug.sh"
+      ],
+      "type": "shell"
+    },
+    {
+      "inline": ["echo 'Extended Cleanup' ; sudo DEBIAN_FRONTEND=noninteractive apt-get -y autoremove --purge ; sudo DEBIAN_FRONTEND=noninteractive apt-get -y autoclean; sudo apt-get check; sudo  rm -rf /var/lib/apt/lists/*"],
+      "type": "shell",
+      "only": ["ubuntu16-ami"]
+    },
+    {
+      "type": "shell",
+      "inline": [ "sudo yum autoremove ; sudo yum clean all ; "  ],
+      "only": ["amazon-linux-ami"]
+    }
+  ],
+  "variables": {
+    "ami_base": "ami-aa2ea6d0",
+    "ami_name": "vault-consul",
+    "ami_time": "{{timestamp}}"
+  }
+}
