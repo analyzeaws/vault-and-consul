@@ -5,7 +5,7 @@ tag_exists () {
         echo "-- ERROR: there was a problem looking up AMI by sha"
         exit 1
     fi
-    EMPTY=$(aws ec2 describe-images --filters Name=tag:SHA,Values=$SHA --query 'Images[*]')
+    EMPTY=$(aws ec2 describe-images --region $REGION --filters Name=tag:SHA,Values=$SHA --query 'Images[*]')
     if [ "$EMPTY" = "[]" ]; then
         echo "false"
     else
@@ -34,7 +34,7 @@ get_base_ami () {
     local NAME=$3
     if [ "$BASE_BUILT" = "false" ]; then
         EXISTING_BASE_SHA="$(git ls-tree HEAD $DIR | cut -d" " -f3 | cut -f1)"
-        EXISTING_BASE_IMAGE=$(aws ec2 describe-images --filters Name=tag:SHA,Values=$EXISTING_BASE_SHA --query 'Images[*]' | jq -r '.[0].ImageId')
+        EXISTING_BASE_IMAGE=$(aws ec2 describe-images --region $REGION --filters Name=tag:SHA,Values=$EXISTING_BASE_SHA --query 'Images[*]' | jq -r '.[0].ImageId')
         echo "$EXISTING_BASE_IMAGE"
     else
         BASE_AMI_US_EAST_1="$(extract_artifact_id $NAME)"

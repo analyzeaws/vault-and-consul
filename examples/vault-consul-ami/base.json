@@ -43,6 +43,13 @@
       "instance_type": "t2.micro",
       "name": "amazon-linux-ami",
       "region": "{{user `aws_region`}}",
+      "tags": {
+        "Vault":"Yes",
+        "Consul":"Yes",
+        "OS_Name": "Amazon Linux",
+        "SHA": "{{user `ami_sha`}}",
+        "AMI": "{{user `ami_name`}}"
+      },
       "type": "amazon-ebs",
       "source_ami_filter": {
         "filters": {

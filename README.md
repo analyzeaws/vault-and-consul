@@ -13,10 +13,36 @@ backend](https://www.vaultproject.io/docs/configuration/storage/index.html). You
 
   Store the generated certs and keys on local file system.
 
+all the builds and development is done ubuntu bash shell running on windows 10 natively using Atom Editor - ** yay! **
+
 ## Packer Image, How it is built ?
 
 Steps executed are as below for building the packer image
 
+
+```
+  update packer.ignore file with keys et. al.
+  $ cd examples
+  $ vault-consul-ami\scripts\build.sh vault-consul-ami base packer.ignore
+  ```
+  Build script above takes three parameters
+  (1) Directory to compare the SHA signature from, this directory should contain all the configuration files for the packer build.
+  In above example it is vault-consul-ami
+  (2) name of the image as json file. IN above example it is base[.json]
+  (3) packer.ignore file contains all secrets such aws keys et. al. packer.ignore contents look like below ```json
+  {
+  "aws_access_key_id" : "XXXXXXXXXXXXXXXX",
+  "aws_secret_access_key" : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "github_oauth_token" : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "region" : "us-east-1",
+  "vault_version": "0.9.3",
+  "vault_module_version": "master",
+  "consul_module_version": "master",
+  "consul_version": "1.0.6",
+  "ca_public_key_path": "vault-and-consul/examples/vault-consul-ami/tls/ca.crt.pem",
+  "tls_public_key_path": "vault-and-consul/examples/vault-consul-ami/tls/vault.crt.pem",
+  "tls_private_key_path": "vault-and-consul/examples/vault-consul-ami/tls/vault.key.pem"
+  }```
 - **Generated certs are subsumed into guest OS.**
 
 
@@ -33,7 +59,7 @@ Uses a
  Image have tag containing the SHA from git repository as an integrity marker.
  Image integrity is determined by comparing the SHA of git *-vis-a-vis-* SHA of image.
 
- 
+
 - **Image pulls & installs vault and consul from Hashicorp github **
 
  [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault):
