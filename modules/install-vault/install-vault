@@ -170,6 +170,7 @@ function create_vault_install_paths {
   log_info "Creating install dirs for Vault at $path"
   sudo mkdir -p "$path"
   sudo mkdir -p "$path/bin"
+  sudo mkdir -p "$path/plugin"
   sudo mkdir -p "$path/config"
   sudo mkdir -p "$path/data"
   sudo mkdir -p "$path/log"

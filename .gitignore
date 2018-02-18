@@ -3,8 +3,8 @@
 *.pvt
 # Terraform files
 .terraform
-terraform.tfstate
-terraform.tfvars
+*.tfstate
+*.tfvars
 *.tfstate*
 
 # OS X files

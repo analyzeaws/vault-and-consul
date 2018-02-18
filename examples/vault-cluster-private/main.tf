@@ -8,8 +8,25 @@ provider "aws" {
   region = "${var.aws_region}"
 }
 
+data "aws_ami" "vault_consul" {
+  most_recent = true
+
+  # If we change the AWS Account in which test are run, update this value.
+  owners = ["self"]
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["vault-consul-ubuntu-*"]
+  }
+}
+
 terraform {
-  required_version = ">= 0.9.3"
+  required_version = ">= 0.9.3, != 0.9.5"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -48,7 +65,7 @@ module "vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_iam_policies_servers" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-iam-policies?ref=v0.1.0"
+  source = "../../modules/consul-iam-policies?ref=v0.1.0"
 
   iam_role_id = "${module.vault_cluster.iam_role_id}"
 }
@@ -73,7 +90,7 @@ data "template_file" "user_data_vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_cluster" {
-  source = "github.com/hashicorp/terraform-aws-consul.git//modules/consul-cluster?ref=v0.1.0"
+  source = "../../modules/consul-cluster?ref=v0.1.0"
 
   cluster_name  = "${var.consul_cluster_name}"
   cluster_size  = "${var.consul_cluster_size}"

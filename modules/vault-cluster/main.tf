@@ -1,9 +1,24 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # THESE TEMPLATES REQUIRE TERRAFORM VERSION 0.8 AND ABOVE
 # ---------------------------------------------------------------------------------------------------------------------
+data "aws_ami" "vault_consul" {
+  most_recent = true
 
+  # If we change the AWS Account in which test are run, update this value.
+  owners = ["self"]
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["vault-consul-ubuntu-*"]
+  }
+}
 terraform {
-  required_version = ">= 0.9.3"
+  required_version = ">= 0.9.3, != 0.9.5"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -42,7 +57,7 @@ resource "aws_autoscaling_group" "autoscaling_group" {
 
 resource "aws_launch_configuration" "launch_configuration" {
   name_prefix   = "${var.cluster_name}-"
-  image_id      = "${var.ami_id}"
+  image_id      = "${var.ami_id == "" ? data.aws_ami.vault_consul.image_id : var.ami_id}"
   instance_type = "${var.instance_type}"
   user_data     = "${var.user_data}"
 

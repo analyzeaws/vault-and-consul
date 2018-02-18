@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # DEPLOY A VAULT SERVER CLUSTER, AN ELB, AND A CONSUL SERVER CLUSTER IN AWS
-# This is an example of how to use the vault-cluster and vault-elb modules to deploy a Vault cluster in AWS with an 
-# Elastic Load Balancer (ELB) in front of it. This cluster uses Consul, running in a separate cluster, as its storage 
+# This is an example of how to use the vault-cluster and vault-elb modules to deploy a Vault cluster in AWS with an
+# Elastic Load Balancer (ELB) in front of it. This cluster uses Consul, running in a separate cluster, as its storage
 # backend.
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -33,16 +33,11 @@ data "aws_ami" "vault_consul" {
   most_recent = true
 
   # If we change the AWS Account in which test are run, update this value.
-  owners = ["562637147889"]
+  owners = ["self"]
 
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
-  }
-
-  filter {
-    name   = "is-public"
-    values = ["true"]
   }
 
   filter {

@@ -7,9 +7,30 @@
 provider "aws" {
   region = "${var.aws_region}"
 }
+data "aws_ami" "vault_consul" {
+  most_recent = true
+
+  # If we change the AWS Account in which test are run, update this value.
+  owners = ["self"]
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "is-public"
+    values = ["true"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["vault-consul-ubuntu-*"]
+  }
+}
 
 terraform {
-  required_version = ">= 0.9.3"
+  required_version = ">= 0.9.3, != 0.9.5"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
