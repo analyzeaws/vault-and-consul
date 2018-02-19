@@ -31,7 +31,15 @@
       "files": null,
       "artifact_id": "us-east-1:ami-a67d64dc",
       "packer_run_uuid": "92c83c45-87e1-746e-3cc1-320ecc6234e5"
+    },
+    {
+      "name": "ubuntu16-ami",
+      "builder_type": "amazon-ebs",
+      "build_time": 1519064166,
+      "files": null,
+      "artifact_id": "us-east-1:ami-51e0042c",
+      "packer_run_uuid": "ab31bc95-6dc9-1381-c079-3b1b71e761d1"
     }
   ],
-  "last_run_uuid": "92c83c45-87e1-746e-3cc1-320ecc6234e5"
+  "last_run_uuid": "ab31bc95-6dc9-1381-c079-3b1b71e761d1"
 }

@@ -133,6 +133,7 @@ function create_user {
       sudo useradd "$username"
     else
       log_info "Creating user named $username with home dir at $user_home"
+      sudo groupadd -f $username 
       sudo useradd -m -d $user_home -g $username "$username"
     fi
   fi
@@ -246,5 +247,5 @@ function install {
 
   log_info "Instant Client install complete!"
 }
-
+echo "Using install $@"
 install "$@"

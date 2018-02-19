@@ -92,7 +92,7 @@
     {
       "type": "shell",
       "inline": [
-        "sudo yum install -y libaio1 curl unzip zip jq git"
+        "sudo yum install -y libaio curl unzip zip jq git"
       ],
       "only": ["amazon-linux-ami"]
     },
@@ -112,12 +112,8 @@
       "destination": "/tmp/vault.key.pem"
     },
     {
-      "type": "file",
-      "source": "{{user `source_zips_ic`}}",
-      "destination": "{{user `target_zips_ic`}}"
-    },
-    {
       "inline": [
+        "mkdir -p ~/{{user `target_zips_ic`}}",
         "git clone --branch {{user `vault_module_version`}} https://{{user `github_oauth_token`}}@github.com/hashicorp/terraform-aws-vault.git ~/vault",
         "git clone --branch {{user `consul_module_version`}} https://{{user `github_oauth_token`}}@github.com/hashicorp/terraform-aws-consul.git ~/consul",
         "sleep 15s",
@@ -131,12 +127,17 @@
     },
     {
       "type": "file",
-      "source": "{{user `module_ic`}}",
-      "destination": "~/vault/modules"
+      "source": "{{user `source_zips_ic`}}",
+      "destination": "~/{{user `target_zips_ic`}}"
+    },
+    {
+      "type": "file",
+      "source": "{{user `source_module_ic`}}",
+      "destination": "~/{{user `target_module_ic`}}"
     },
     {
       "inline": [
-        "{{user `module_ic`}}install-ic/install-ic  --rpm_path {{user `target_zips_ic`}} --path {{user `install_dir_ic`}} --user {{user `user_ic`}} --vault_user vault }"
+        "~/{{user `target_module_ic`}}install-ic  --rpm_path ~/{{user `target_zips_ic`}} --path {{user `install_dir_ic`}} --user {{user `user_ic`}} --vault_user vault "
       ],
       "type": "shell"
     },
