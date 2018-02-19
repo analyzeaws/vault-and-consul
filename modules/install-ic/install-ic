@@ -1,0 +1,249 @@
+#!/bin/bash
+# This script can be used to install Oracle Instant Client and its dependencies.
+# This script has been tested with the following
+# operating systems:
+#
+# 1. Ubuntu 16.04
+# 2. Amazon Linux
+# Anticipated use, install ic, and then from vault private,
+# configure vault to use it, by adding vault to oracle group.
+
+set -e
+readonly DEFAULT_RPM_PATH="~/rpm"
+readonly DEFAULT_INSTALL_PATH="/opt/oracle"
+readonly DEFAULT_IC_USER="oracle"
+readonly DEFAULT_VAULT_USER="vault"
+
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SYSTEM_BIN_DIR="/usr/local/bin"
+
+readonly SCRIPT_NAME="$(basename "$0")"
+
+function print_usage {
+  echo
+  echo "Usage: install-ic [OPTIONS]"
+  echo
+  echo "This script can be used to install Oracle Instant Client and its dependencies. This script has been tested with Ubuntu 16.04 and Amazon Linux."
+  echo
+  echo "Options:"
+  echo
+  echo -e "  --rpm_path\t\tThe path where IC rpm image is available.  Default: $DEFAULT_RPM_PATH."
+  echo -e "  --path\t\tThe path where IC should be installed. Optional. Default: $DEFAULT_INSTALL_PATH."
+  echo -e "  --user\t\tThe user who will own the IC install directories. Optional. Default: $DEFAULT_IC_USER."
+  echo -e "  --vault_user\t\t\tVault user to add to oracle group.Optional. Default: $DEFAULT_VAULT_USER."
+  echo
+  echo "Example:"
+  echo
+  echo "  install-ic --rpm_path /tmp/oracle --user oracle "
+}
+
+function log {
+  local readonly level="$1"
+  local readonly message="$2"
+  local readonly timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  >&2 echo -e "${timestamp} [${level}] [$SCRIPT_NAME] ${message}"
+}
+
+function log_info {
+  local readonly message="$1"
+  log "INFO" "$message"
+}
+
+function log_warn {
+  local readonly message="$1"
+  log "WARN" "$message"
+}
+
+function log_error {
+  local readonly message="$1"
+  log "ERROR" "$message"
+}
+
+function assert_not_empty {
+  local readonly arg_name="$1"
+  local readonly arg_value="$2"
+
+  if [[ -z "$arg_value" ]]; then
+    log_error "The value for '$arg_name' cannot be empty"
+    print_usage
+    exit 1
+  fi
+}
+
+function two_way_symlink() {
+  local src="$1"
+  local dest="$2"
+
+  if [[ ! -f "$dest" ]] && [[ ! -f "$src" ]]; then
+    echo "Missing source '$src' AND destination '$dest' exiting..."
+    exit -5
+  fi
+
+  if [[ ! -f "$dest" ]]; then
+    ## Destination isn't there point it to source
+    sudo ln -s $src  $dest
+  elif [[ ! -f "$src" ]]; then
+    ## Source file was missing, point to destination.  Should ONLY do so if it doesn't already exist (e.g. hadn't already been dual linked)
+    sudo ln -s $dest $src
+  fi
+
+
+}
+
+function has_yum {
+  [[ -n "$(command -v yum)" ]]
+}
+
+function has_apt_get {
+  [[ -n "$(command -v apt-get)" ]]
+}
+
+function install_dependencies {
+  log_info "Installing dependencies"
+
+  if $(has_apt_get); then
+    sudo apt-get install -y libaio1
+  elif $(has_yum); then
+    sudo yum install -y libaio1
+  else
+    log_error "Could not find apt-get or yum. Cannot install dependencies on this OS."
+    exit 1
+  fi
+}
+
+function user_exists {
+  local readonly username="$1"
+  id "$username" >/dev/null 2>&1
+}
+
+function create_user {
+  local readonly username="$1"
+  local user_home
+
+  if [[ $# > 1 ]]; then
+    local user_home="$2"
+  fi
+
+  if $(user_exists "$username"); then
+    echo "User $username already exists. Will not create again."
+  else
+
+    if [[ -z "$user_home" ]]; then
+      log_info "Creating user named $username"
+      sudo useradd "$username"
+    else
+      log_info "Creating user named $username with home dir at $user_home"
+      sudo useradd -m -d $user_home -g $username "$username"
+    fi
+  fi
+}
+
+function create_install_paths {
+  local readonly path="$1"
+  local readonly username="$2"
+
+  log_info "Creating install dirs for IC at $path"
+  sudo mkdir -p $path
+
+  log_info "Changing ownership of $path to $username"
+  sudo chown -R "$username:$username" "$path"
+}
+
+function install_binaries {
+  local readonly rpm_path="$1"
+  local readonly path="$2"
+  local readonly username="$3"
+  local readonly vault_user="$4"
+  local readonly ic_shell="/etc/profile.d/ic.sh"
+  local readonly ic_conf="/etc/ld.so.conf.d/ic.conf"
+
+  #local readonly default_url="https://releases.hashicorp.com/vault/${version}/vault_${version}_linux_amd64.zip"
+  #local readonly url=${custom_url:=$default_url}
+  local readonly download_path="$rpm_path/instantclient*.zip"
+
+  log_info "Installing Instant Client from $rpm_path to $path"
+  #unzip -l $rpm_path/instantclient*.zip | awk 'NR==4{print $4}' | sed 's//// '
+  #unzip -d $path $rpm_path
+  sudo rm -rf $path
+  sudo unzip -u $rpm_path'/instantclient*.zip' -d $path
+  export ORACLE_HOME=$(find $path -mindepth 1 -maxdepth 1 -type d)
+  export OCI_LIB=$ORACLE_HOME
+  export TNS_ADMIN=$ORACLE_HOME/network/admin
+  sudo mkdir -p $TNS_ADMIN
+  # Write the instant client export to the environment
+  if [[ -f /etc/profile.d/instantclient.sh ]]; then
+    sudo rm -f $ic_shell
+  fi
+  sudo touch $ic_shell && sudo chmod +x $ic_shell
+
+  local readonly shell_config=$(cat <<EOF
+  export ORACLE_HOME=$ORACLE_HOME
+  export OCI_LIB=$OCI_LIB
+  export TNS_ADMIN=$TNS_ADMIN
+EOF
+)
+ echo "$shell_config" | sudo tee $ic_shell
+
+ echo "$OCI_LIB" | sudo tee $ic_conf
+ sudo ldconfig -v
+
+  # Give vault user access to instant client group
+  sudo usermod -G $username $vault_user
+}
+
+function install {
+  local rpm_path="$DEFAULT_RPM_PATH"
+  local path="$DEFAULT_INSTALL_PATH"
+  local user="$DEFAULT_USER"
+  local vault_user="$DEFAULT_VAULT_USER"
+
+  while [[ $# > 0 ]]; do
+    local key="$1"
+
+    case "$key" in
+      --rpm_path)
+        rpm_path="$2"
+        shift
+        ;;
+      --path)
+        path="$2"
+        shift
+        ;;
+      --user)
+        user="$2"
+        shift
+        ;;
+      --vault_user)
+        vault_user="$2"
+        shift
+        ;;
+      --help)
+        print_usage
+        exit
+        ;;
+      *)
+        log_error "Unrecognized argument: $key"
+        print_usage
+        exit 1
+        ;;
+    esac
+
+    shift
+  done
+
+  assert_not_empty "--rpm_path" "$rpm_path"
+  assert_not_empty "--path" "$path"
+  assert_not_empty "--user" "$user"
+
+  log_info "Starting Instant Client install"
+
+  install_dependencies
+  create_user "$user" "$path"
+  create_user "$vault_user"
+  create_install_paths "$path" "$user"
+  install_binaries "$rpm_path" "$path" "$user" "$vault_user"
+
+  log_info "Instant Client install complete!"
+}
+
+install "$@"

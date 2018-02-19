@@ -85,14 +85,14 @@
         "sudo locale-gen en_US.UTF-8 || true",
         "sudo update-locale LANG=en_US.UTF-8",
         "sudo DEBIAN_FRONTEND=noninteractive apt-get -y update",
-        "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install apt-transport-https curl unzip zip jq git"
+        "sudo DEBIAN_FRONTEND=noninteractive apt-get -y install libaio1 apt-transport-https curl unzip zip jq git"
       ],
       "only": ["ubuntu16-ami"]
     },
     {
       "type": "shell",
       "inline": [
-        "sudo yum install -y curl unzip zip jq git"
+        "sudo yum install -y libaio1 curl unzip zip jq git"
       ],
       "only": ["amazon-linux-ami"]
     },
@@ -109,6 +109,11 @@
     {
       "type": "file",
       "source": "{{user `tls_private_key_path`}}",
+      "destination": "/tmp/vault.key.pem"
+    },
+    {
+      "type": "file",
+      "source": "{{user `oracle_instant_client`}}",
       "destination": "/tmp/vault.key.pem"
     },
     {
