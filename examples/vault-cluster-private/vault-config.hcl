@@ -3,6 +3,7 @@ disable_mlock = true /* for dev, mlock is not needed, for production should be e
 
 /* plugin directory under vault home */
 plugin_directory = "./plugin"
+api_addr = "https://127.0.0.1:8300"
 
 ui = true
 
@@ -37,16 +38,6 @@ listener "tcp" {
     tls_key_file  = "/mnt/c/Users/deepa/source/repos/vault-and-consul/examples/vault-consul-ami/tls/vault.key.pem"
     */
 }
-
-/*
-telemetry {
-    statsite_address = "127.0.0.1:8125"
-    disable_hostname = true
-}
-*/
-
-# address on which vault server would communicate with the plugin 
-api_address = "127.0.0.1:8300"
 
 max_lease_ttl = "10h"
 default_lease_ttl = "4h"
