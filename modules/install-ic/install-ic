@@ -177,13 +177,14 @@ function install_binaries {
   sudo touch $ic_shell && sudo chmod +x $ic_shell
 
   local readonly shell_config=$(cat <<EOF
+  #!/bin/sh
   export ORACLE_HOME=$ORACLE_HOME
   export OCI_LIB=$OCI_LIB
   export TNS_ADMIN=$TNS_ADMIN
 EOF
 )
  echo "$shell_config" | sudo tee $ic_shell
-
+ source $ic_shell
  echo "$OCI_LIB" | sudo tee $ic_conf
  sudo ldconfig -v
 
