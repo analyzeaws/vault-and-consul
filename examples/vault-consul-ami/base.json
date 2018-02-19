@@ -1,6 +1,6 @@
 {
   "_readme": [
-    "An Ubuntu 16.04 AMI that has Vault and Consul installed. ",
+    "An Ubuntu 16.04 AMI that has Hashicorp Vault, HashiCorp Consul and Oracle Instant Client installed. ",
     "Ubuntu 16.04 (xenial) LTS",
     "AMI: amd64 hvm:ebs-ssd",
     "     see the *_ami variables below for specific names",
@@ -114,7 +114,7 @@
     {
       "type": "file",
       "source": "{{user `oracle_instant_client`}}",
-      "destination": "/tmp/vault.key.pem"
+      "destination": "~/oracle"
     },
     {
       "inline": [
