@@ -1,13 +1,19 @@
+# -------- Commented for integrated use with vault-consul
+/*
 provider "aws" {
 region = "${var.aws_region}"
 }
 
-##############################################################
-# Data sources to get VPC, subnets and security group details
-##############################################################
 data "aws_vpc" "default" {
   default = true
 }
+
+# -------- Commented for integrated use with vault-consul
+*/
+##############################################################
+# Data sources to get VPC, subnets and security group details
+##############################################################
+
 
 ##############################################################
 # need to ensure that default vpc group allows oracle tns listener port connection, default 1521
@@ -25,7 +31,7 @@ data "aws_security_group" "default" {
 # DB
 #####
 module "db" {
-  source = "../../../modules/rds"
+  source = "modules/rds"
 
   identifier = "hshcrpdb"
 

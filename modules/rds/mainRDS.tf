@@ -7,7 +7,7 @@ locals {
 # DB subnet group
 ##################
 module "db_subnet_group" {
-  source = "./db_subnet_group"
+  source = "../db_subnet_group"
 
   count       = "${local.enable_create_db_subnet_group}"
   identifier  = "${var.identifier}"
@@ -21,7 +21,7 @@ module "db_subnet_group" {
 # DB parameter group
 #####################
 module "db_parameter_group" {
-  source = "./db_parameter_group"
+  source = "../db_parameter_group"
 
   count       = "${var.create_db_parameter_group}"
   identifier  = "${var.identifier}"
@@ -37,7 +37,7 @@ module "db_parameter_group" {
 # DB instance
 ##############
 module "db_instance" {
-  source = "./db_instance"
+  source = "../db_instance"
 
   count             = "${var.create_db_instance}"
   identifier        = "${var.identifier}"

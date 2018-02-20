@@ -112,7 +112,7 @@ variable "iops" {
 
 variable "publicly_accessible" {
   description = "Bool to control if instance is publicly accessible"
-  default     = false
+  default     = true
 }
 
 variable "monitoring_interval" {
@@ -147,7 +147,7 @@ variable "auto_minor_version_upgrade" {
 
 variable "apply_immediately" {
   description = "Specifies whether any database modifications are applied immediately, or during the next maintenance window"
-  default     = false
+  default     = true
 }
 
 variable "maintenance_window" {
