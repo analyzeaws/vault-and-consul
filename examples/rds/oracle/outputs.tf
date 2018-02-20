@@ -1,26 +1,26 @@
 # DB instance
 output "this_db_instance_address" {
-  description = "The address of the RDS instance"
+  description = "The address of the Oracle instance"
   value       = "${module.db.this_db_instance_address}"
 }
 
 output "this_db_instance_arn" {
-  description = "The ARN of the RDS instance"
+  description = "The ARN of the Oracle instance"
   value       = "${module.db.this_db_instance_arn}"
 }
 
 output "this_db_instance_availability_zone" {
-  description = "The availability zone of the RDS instance"
+  description = "The availability zone of the Oracle instance"
   value       = "${module.db.this_db_instance_availability_zone}"
 }
 
 output "this_db_instance_endpoint" {
-  description = "The connection endpoint"
+  description = "The Oracle connection endpoint"
   value       = "${module.db.this_db_instance_endpoint}"
 }
 
 output "this_db_instance_hosted_zone_id" {
-  description = "The canonical hosted zone ID of the DB instance (to be used in a Route 53 Alias record)"
+  description = "The canonical hosted zone ID of the Oracle instance (to be used in a Route 53 Alias record)"
   value       = "${module.db.this_db_instance_hosted_zone_id}"
 }
 

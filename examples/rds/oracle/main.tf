@@ -9,6 +9,9 @@ data "aws_vpc" "default" {
   default = true
 }
 
+##############################################################
+# need to ensure that default vpc group allows oracle tns listener port connection, default 1521
+##############################################################
 data "aws_subnet_ids" "all" {
   vpc_id = "${data.aws_vpc.default.id}"
 }
@@ -22,7 +25,7 @@ data "aws_security_group" "default" {
 # DB
 #####
 module "db" {
-  source = "../../../"
+  source = "../../../modules/rds"
 
   identifier = "hshcrpdb"
 
