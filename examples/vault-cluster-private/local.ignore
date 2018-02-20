@@ -1,0 +1,154 @@
+Unseal Key: KQCBNBHHbMX6fm4UGOXrNAHIL5B72Y+ab/r08+Y/uSM=
+Root Token: 5cfed413-9cb4-047c-3e0c-e178d0c36472
+
+export VAULT_ADDR='http://127.0.0.1:8200'
+AWS vault-root // able to create IAM users in AWS
+User name		  Access key ID	        Secret access key
+vault-root		AKIAI5U32BPYACL4TR4A	5Zz5Z1ETEWYjKdYWJTH4k4w5jmLBoEdzlsM6yOdA
+
+Unseal Key 1: fffBo/+La4i9IqPbUw5SK6MWJU/cZrGeRKlD03QDybTn
+Unseal Key 2: QoREdkt0meM6FCcvRru//w2eLpiggWV35lcllcuyNYyj
+Unseal Key 3: 1/RG5zlpkJg6dTyZg2UoXAk5j3Mv0J0QYuzHCh2DAaaQ
+Unseal Key 4: uhfW5gktyi3mXBFyxE01ZpJSgP+M3mBMUhBkonIBuUx6
+Unseal Key 5: rTIGciqiHxWzbDnqLtmO+xjlSgUd9wNZv/XDOHjWHEi1
+
+Initial Root Token: 33511137-40ed-d0dd-737f-91819daa791e
+-----------------------------------------------------------------------------
+
+Use Case 1
+Steps
+(1) Install RDS with oracle SE2, get the username/password
+
+(2) Install Vault
+ - vault operator init // to initialize the vault, needed once only
+ - vault operator unseal // atleast 3 times to unseal with diff keys
+ - vault login <root token> // to authenticate and issue commands
+ - vault operator audit-enable -address=${VAULT_ADDR} file file_path=/opt/vault/logs/audit.log
+
+(3) Configure Vault Client on Consul EC2, to talk to Vault Server
+    Client Configuration as below
+
+    Enable aws secrets engine
+    vault write aws/config/lease lease="4h" lease_max="8h"
+    vault write aws/roles/dev
+    vault write aws/roles/dev  arn=arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+    Sleep for 30 seconds, to allow IAM roles to propogate
+
+    vault write aws/roles/build
+    vault write aws/roles/build
+
+    Enable authentication(s) for Vault
+     vault auth enable -path=github github
+     vault auth enable userpass
+     vault auth enable AppRole
+     vault auth enable aws
+
+    Setup Vault with oracle integration
+    ==================================
+    enable database oracle secrets engine
+    -vault secrets enable database
+
+   -download the oracle plugin from github
+    calculate the sha256 sum for the plugin
+    sha256 vault-plugin-database-oracle
+    086c50770b4ed89e768f7864c310baa2871986fb2cef7f781a7ec826d9ff0a50
+
+    -register the oracle plugin
+    vault write sys/plugins/catalog/vault-plugin-database-oracle  sha_256=086c50770b4ed89e768f7864c310baa2871986fb2cef7f781a7ec826d9ff0a50  command="vault-plugin-database-oracle"
+
+    - configure the database plugin for oracle, to talk to oracle, with role for oracleAdmin
+    vault write database/config/HSHCRPDB \
+    plugin_name="vault-plugin-database-oracle" \
+    allowed_roles="[hshCreate, hshRead]" \
+    connection_url="hshcrp/hashicorp@//hshcrpdb.c0ukynotdvav.us-east-1.rds.amazonaws.com:1521/HSHCRPDB"
+
+    - delete previous if any
+    curl \
+    --header "X-Vault-Token:bc2c23fe-bf2d-087f-ff37-596c5605911e" \
+    --request DELETE \
+    https://127.0.0.1:8300/v1/database/config/HSHCRPDB
+
+    - Create the role for DB create statements
+    vault write database/roles/hshCreate \
+    db_name="HSHCRPDB" \
+    creation_statements="CREATE USER {{name}} IDENTIFIED BY {{password}} DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP; \
+    GRANT CREATE ROLE TO {{name}} ; \
+    GRANT CREATE LIBRARY TO {{name}} ; \
+    GRANT CREATE TRIGGER TO {{name}} ; \
+    GRANT DEBUG CONNECT SESSION TO {{name}} ; \
+    GRANT CREATE MATERIALIZED VIEW TO {{name}} ; \
+    GRANT CREATE INDEXTYPE TO {{name}} ; \
+    GRANT CREATE VIEW TO {{name}} ; \
+    GRANT CREATE SESSION TO {{name}} ; \
+    GRANT BECOME USER TO {{name}} ; \
+    GRANT CREATE TABLE TO {{name}} ; \
+    GRANT CREATE TYPE TO {{name}} ; \
+    GRANT QUERY REWRITE TO {{name}} ; \
+    GRANT CREATE PUBLIC SYNONYM TO {{name}} ; \
+    GRANT GLOBAL QUERY REWRITE TO {{name}} ; \
+    GRANT CREATE SYNONYM TO {{name}} ; \
+    GRANT CREATE SEQUENCE TO {{name}} ; \
+    GRANT CREATE USER TO {{name}} ; \
+    GRANT DROP PUBLIC SYNONYM TO {{name}} ; \
+    GRANT DROP USER TO {{name}} ; \
+    GRANT FORCE TRANSACTION TO {{name}} ; \
+    GRANT CREATE PROCEDURE TO {{name}} " \
+    default_ttl="1h" \
+    max_ttl="24h"
+
+    vault write database/roles/hshRead \
+    db_name=HSHCRPDB \
+    creation_statements="create user {{name}} identified by {{password}}; \
+    GRANT CONNECT TO {{name}}; GRANT CREATE SESSION TO {{name}};" \
+    default_ttl="1h" \
+    max_ttl="24h"
+
+    -- read the creds, to generate new username/password
+    vault read database/creds/hshRead
+    vault read database/creds/hshCreate
+
+    How to do encryption at Rest
+
+    How to do Transparent Data Encryption
+    ========================================
+    Enable transit secrets service in vault
+    vault secrets enable transit
+
+    Create a named encryption key ring:
+    vault write -f transit/keys/encKey
+
+    use ACL
+      to provision only key enablement/rotation to operators
+      to provision only encryption/decryption to users
+      to provision upgrade to everyone, since data is never revealed, only new cipher is generated.
+
+    to encrypt
+    ----------
+    client sends Base64 encoded text to encrypt
+    vault write transit/decrypt/encKey ciphertext=vault:v1:8SDd3WHDOjf7mq69CyCqYjBXAiQQAVZRkFM13ok481zoCmHnSeDX9vyf7w==
+
+
+    to decrypt
+    ----------
+    client sends encrypted text to decrypt
+    vault write transit/decrypt/my-key ciphertext=vault:v1:8SDd3WHDOjf7mq69CyCqYjBXAiQQAVZRkFM13ok481zoCmHnSeDX9vyf7w== | base64 --decode
+
+    to rotate encryption key
+    ------------------------
+    vault write -f transit/keys/encKey/rotate
+    After rotation new keys is used for encryption, but only ciphertext can still be decrypted using the new key.
+    This is possible due to creation of key ring.
+
+    to upgrade old cipher text to use new rotated key
+    -------------------------------------------------
+    $ vault write transit/rewrap/encKey ciphertext=vault:v1:8SDd3WHDOjf7mq69CyCqYjBXAiQQAVZRkFM13ok481zoCmHnSeDX9vyf7w==
+
+
+    use aws cli to generate IAM token, say, "awstempkey"
+    configure aws secrets engine with above aws credentials "awstempkey"
+    Create Policy with access to RDS server alone ?
+    revoke the access key after RDS is initialized
+
+
+(1) Install RDS with oracle, using standard edition, which does not support encryption
+(2) Use Vault to connect with oracle [move this into vault provisioning ]
