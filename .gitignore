@@ -1,4 +1,5 @@
 # deepak ignore files
+.?*
 *.ignore
 *.pvt
 # Terraform files
