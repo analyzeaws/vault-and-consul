@@ -59,7 +59,7 @@ Steps executed are as below for building the packer image
 
  [update-certificate-store](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/update-certificate-store): Add a trusted, CA public key to an OS's certificate store. This allows you to establish TLS connections to services that use this TLS certs signed by this CA without getting x509 certificate errors.
 
-- **Image is built, Image is time-stamped, versioned and certs are transferred over. **
+**Image is built, Image is time-stamped, versioned and certs are transferred over. **
 
 Uses a
  [Packer](https://www.packer.io/) template to create a Vault
@@ -70,7 +70,7 @@ Uses a
  Image integrity is determined by comparing the SHA of git *-vis-a-vis-* SHA of image.
 
 
-- **Image pulls & installs vault and consul from Hashicorp github **
+-**Image pulls & installs vault and consul from Hashicorp github **
 
  [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault):
   Packer template itself rebuilds every time there is change to git repository containing the packing information for the AMI.
