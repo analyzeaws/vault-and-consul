@@ -70,7 +70,7 @@ Uses a
  Image integrity is determined by comparing the SHA of git *-vis-a-vis-* SHA of image.
 
 
--**Image pulls & installs vault and consul from Hashicorp github **
+**Image pulls & installs vault and consul from Hashicorp github **
 
  [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault):
   Packer template itself rebuilds every time there is change to git repository containing the packing information for the AMI.
