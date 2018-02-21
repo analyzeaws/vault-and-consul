@@ -1,0 +1,15 @@
+# Compiled files
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+# Module directory
+.terraform/
+
+# all dot files
+.?*
+
+# all ignore directory files
+*.ignore 
+ignore/
+*/ignore/
