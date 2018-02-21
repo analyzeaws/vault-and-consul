@@ -13,7 +13,7 @@ backend](https://www.vaultproject.io/docs/configuration/storage/index.html). You
 
   Store the generated certs and keys on _**local**_ file system.
  **TBD**: Avoid this, and automate generation of ca auth and signed certs after image creation. That would avoid having to create the certs offline first. Perhaps store the certs in Vault.
- 
+
 all the builds and development is done ubuntu bash shell running on windows 10 natively using Atom Editor - ** yay! **
 
 ## Packer Image, How it is built ?
@@ -51,8 +51,10 @@ Steps executed are as below for building the packer image
   "ca_public_key_path": "vault-and-consul/examples/vault-consul-ami/tls/ca.crt.pem",
   "tls_public_key_path": "vault-and-consul/examples/vault-consul-ami/tls/vault.crt.pem",
   "tls_private_key_path": "vault-and-consul/examples/vault-consul-ami/tls/vault.key.pem"
-  }```
-- **Generated certs are subsumed into guest OS.**
+  }
+  ```
+
+ **Generated certs are subsumed into guest OS.**
 
 
  [update-certificate-store](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/update-certificate-store): Add a trusted, CA public key to an OS's certificate store. This allows you to establish TLS connections to services that use this TLS certs signed by this CA without getting x509 certificate errors.
