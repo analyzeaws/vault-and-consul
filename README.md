@@ -16,69 +16,8 @@ backend](https://www.vaultproject.io/docs/configuration/storage/index.html). You
 
 all the builds and development is done ubuntu bash shell running on windows 10 natively using Atom Editor - ** yay! **
 
-## _**Packer Image**_  (with Vault/Consul and Oracle Instant Client) _, How it is built ?_
+###### Please refer to the example/vault-consul-ami [readme](file://example/vault-consul-ami/README.md) to find details on how packer is used to build the AMI.
 
-Steps executed are as below for building the packer image
-
-
-```
-  update packer.ignore file with keys et. al.
-  $ cd examples
-  $ vault-consul-ami\scripts\build.sh vault-consul-ami base packer.ignore
-  ```
-  Build script above takes three parameters
-
-
-  (1) Directory to compare the SHA signature from, this directory should contain all the configuration files for the packer build.
-  In above example it is vault-consul-ami
-
-
-  (2) Name of the image as json file. IN above example it is `base[.json]`
-
-
-  (3) `packer.ignore` file *(yup, you need your own credentials ;)* contains all secrets such aws keys et. al. packer.ignore contents look like below
-
-  ```
-  {
-  "aws_access_key_id" : "XXXXXXXXXXXXXXXX",
-  "aws_secret_access_key" : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  "github_oauth_token" : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  "region" : "us-east-1",
-  "vault_version": "0.9.3",
-  "vault_module_version": "master",
-  "consul_module_version": "master",
-  "consul_version": "1.0.6",
-  "ca_public_key_path": "vault-and-consul/examples/vault-consul-ami/tls/ca.crt.pem",
-  "tls_public_key_path": "vault-and-consul/examples/vault-consul-ami/tls/vault.crt.pem",
-  "tls_private_key_path": "vault-and-consul/examples/vault-consul-ami/tls/vault.key.pem"
-  }
-  ```
-
- **Generated certs are subsumed into guest OS.**
-
-
- [update-certificate-store](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/update-certificate-store): Add a trusted, CA public key to an OS's certificate store. This allows you to establish TLS connections to services that use this TLS certs signed by this CA without getting x509 certificate errors.
-
-
-** Image is built, Image is time-stamped, versioned and certs are transferred over. **
-
-Uses a
- [Packer](https://www.packer.io/) template to create a Vault
- [Amazon Machine Image (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html), and
- [Ubuntu16 Machine Image (AMI)](https://aws.amazon.com/marketplace/pp/B01JBL2M0O).
- Both the images are provided same suffix based on the timestamp the image was created.
- Image has the tag containing SHA generated from `git` repository as an integrity marker.
-
- AMI Image integrity is determined by comparing the computed ``git SHA`` *-vis-a-vis-* ``SHA`` tag on AMI image.
-
-
-**Image pulls & installs vault and consul from github ** (https://github.com/analyzeaws/vault-and-consul)
-
-
- [install-vault](https://github.com/analyzeaws/vault-and-consul/tree/master/modules/install-vault):
-  Packer template itself rebuilds every time there is change to git repository containing the packing information for the AMI.
-
----
 TBD
 * [run-vault](https://github.com/analyzeaws/vault-and-consul/tree/master/modules/run-vault): This module can be used to configure and run Vault. It can be used in a
   [User Data](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html#user-data-shell-scripts)
@@ -94,7 +33,7 @@ TBD
 Modules are borrowed heavily from [Gruntwork](http://www.gruntwork.io/).
 Key modules are as below
 ```
-├── mainRDS.tf // Main file to provision RDS
+├── mainRDS.tf // [New] Main file to provision RDS
 ├── main.tf    // Main file to provision vault and consul cluster
 ├── manifest-base.json // Manifest file generator by packer
 ├── modules
@@ -111,17 +50,17 @@ Key modules are as below
 │   │   ├── main.tf
 │   │   ├── README.md
 │   │   └── variables.tf
-│   ├── db_instance // Module to configure, DB instance parameters, used by mainRDS.tf
+│   ├── db_instance // [New] Module to configure, DB instance parameters, used by mainRDS.tf
 │   │   ├── main.tf
 │   │   ├── outputs.tf
 │   │   ├── policy
 │   │   │   └── enhancedmonitoring.json
 │   │   └── variables.tf
-│   ├── db_parameter_group // Module to configure DB parameters, used by mainRDS.tf
+│   ├── db_parameter_group // [New] Module to configure DB parameters, used by mainRDS.tf
 │   │   ├── main.tf
 │   │   ├── outputs.tf
 │   │   └── variables.tf
-│   ├── db_subnet_group // Module to assign RDS in given subnets, used by mainRDS.tf
+│   ├── db_subnet_group // [New] Module to assign RDS in given subnets, used by mainRDS.tf
 │   │   ├── main.tf
 │   │   ├── outputs.tf
 │   │   └── variables.tf
@@ -130,7 +69,7 @@ Key modules are as below
 │   │   ├── README.md
 │   │   ├── supervisord.conf
 │   │   └── supervisor-initd-script.sh
-│   ├── install-ic // Shell script to install Oracle Instant Client, used during AMI buid by packer
+│   ├── install-ic // [New] Shell script to install Oracle Instant Client, used during AMI buid by packer
 │   │   ├── install-ic
 │   │   └── README.md
 │   ├── install-vault // Shell script to install vault, used during AMI build by packer
@@ -145,7 +84,7 @@ Key modules are as below
 │   │   ├── terraform.tfstate
 │   │   ├── terraform.tfstate.backup
 │   │   └── variables.tf
-│   ├── rds              // Module to provision RDS instance
+│   ├── rds              // [New] Module to provision RDS instance
 │   │   ├── mainRDS.tf
 │   │   ├── outputsRDS.tf
 │   │   ├── README.md
@@ -173,10 +112,10 @@ Key modules are as below
 │       ├── main.tf
 │       ├── README.md
 │       └── variables.tf
-├── outputsRDS.tf // provides endpoint and url et. al. to connect to database
+├── outputsRDS.tf // [New] provides endpoint and url et. al. to connect to database
 ├── outputs.tf
 ├── README.md
-├── variablesRDS.tf
+├── variablesRDS.tf [New] 
 └── variables.tf
 ```
 
