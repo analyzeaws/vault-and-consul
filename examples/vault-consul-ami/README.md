@@ -80,13 +80,24 @@ Steps executed are as below for building the packer image
   "aws_secret_access_key" : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   "github_oauth_token" : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   "region" : "us-east-1",
+  "aws_region" : "us-east-1",
   "vault_version": "0.9.3",
   "vault_module_version": "master",
   "consul_module_version": "master",
   "consul_version": "1.0.6",
-  "ca_public_key_path": "vault-and-consul/examples/vault-consul-ami/tls/ca.crt.pem",
-  "tls_public_key_path": "vault-and-consul/examples/vault-consul-ami/tls/vault.crt.pem",
-  "tls_private_key_path": "vault-and-consul/examples/vault-consul-ami/tls/vault.key.pem"
+  "create_dns_entry":"0",
+  "hosted_zone_domain_name": "/hostedzone/ZKPSVQ6E5P27V",
+  "vault_domain_name": "vault.analyzeaws.com.",
+  "ssh_key_name": "hashicorpKeyPair",
+  "ca_public_key_path": "/mnt/c/Users/deepa/source/repos/vault-and-consul/examples/vault-consul-ami/tls/ca.crt.pem",
+  "tls_public_key_path": "/mnt/c/Users/deepa/source/repos/vault-and-consul/examples/vault-consul-ami/tls/vault.crt.pem",
+  "tls_private_key_path": "/mnt/c/Users/deepa/source/repos/vault-and-consul/examples/vault-consul-ami/tls/vault.key.pem",
+  "source_zips_ic": "/mnt/c/Users/deepa/source/repos/vault-and-consul/examples/vault-consul-ami/ic/",
+  "target_zips_ic": "oracle/",
+  "user_ic": "oracle",
+  "source_module_ic": "/mnt/c/Users/deepa/source/repos/vault-and-consul/modules/install-ic/",
+  "target_module_ic": "vault/modules/",
+  "install_dir_ic": "/opt/oracle"
   }
   ```
 
