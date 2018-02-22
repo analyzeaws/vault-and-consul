@@ -115,9 +115,11 @@ Key modules are as below
 ├── outputsRDS.tf // [New] provides endpoint and url et. al. to connect to database
 ├── outputs.tf
 ├── README.md
-├── variablesRDS.tf [New] 
+├── variablesRDS.tf [New]
 └── variables.tf
 ```
+The vault and consul cluster(s) below (both) use packer built Ubuntu AMI image automatically,
+by fetching the AMI image id using the filter on owner=self and name **vault-consul-ubuntu-***.
 
 To deploy Vault with this Module, you will need to deploy two separate clusters: one to run
 [Consul](https://www.consul.io/) servers (which Vault uses as a [storage
