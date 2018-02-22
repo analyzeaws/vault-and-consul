@@ -1,98 +1,115 @@
 # Vault and Consul AMI
+Please refer to Gruntworks [readme](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-consul-ami) for vault-consul-ami for base module, which is used as *inspiration* for this example.
 
-This folder shows an example of how to use the [install-vault module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault) from this Module and 
-the [install-consul](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-consul)
-and [install-dnsmasq](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/install-dnsmasq) modules
-from the Consul AWS Module with [Packer](https://www.packer.io/) to create [Amazon Machine Images 
-(AMIs)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) that have Vault and Consul installed on top of:
- 
-1. Ubuntu 16.04
-1. Amazon Linux
+## Following are *changes* to above gruntwork module
+(1) Integrated with git repository, and re-build upon any change to Git repository for vault-consul-ami
 
-You can use this AMI to deploy a [Vault cluster](https://www.vaultproject.io/) by using the [vault-cluster
-module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/vault-cluster). This Vault cluster will use Consul as its storage backend, so you can also use the 
-same AMI to deploy a separate [Consul server cluster](https://www.consul.io/) by using the [consul-cluster 
-module](https://github.com/hashicorp/terraform-aws-consul/tree/master/modules/consul-cluster). 
+(2) Both the Ubuntu and Amazon Linux images are given same suffix (based on current timestamp from variable ami_time) to easily identify all images built together.
 
-Check out the [vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) and 
-[vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) examples for working sample code. For more info on Vault 
-installation and configuration, check out the [install-vault](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/install-vault) documentation.
+(3) Both Ubuntu and Amazon Linux images have same SHA variable value, = git SHA for this folder.
 
+(4) Oracle instant client (from sub directory **ic**) is packed into the image *(in addition to vault and consul)* as well.
 
+(5) Oracle instant client is configured for all users on linux machine (vault user is added to the group for oracle)
 
-## Quick start
+(6) Ubuntu image uses local user "ubuntu" home directory, for local file uploads.
 
-To build the Vault and Consul AMI:
+(7) Amazon Linux image uses local user "ec2-user" home directory, for local file uploads.
 
-1. `git clone` this repo to your computer.
+(8) Uses **build.sh** script to build the images, which compares the SHA of git against SHA on image.
 
-1. Install [Packer](https://www.packer.io/).
+(9) **manifest-base.json** is used to create the manifest for the build, as part of post-processor in packer template (base.json).
 
-1. Configure your AWS credentials using one of the [options supported by the AWS 
-   SDK](http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html). Usually, the easiest option is to
-   set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
-
-1. Use the [private-tls-cert module](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert) to generate a CA cert and public and private keys for a 
-   TLS cert: 
-   
-    1. Set the `dns_names` parameter to `vault.service.consul`. If you're using the [vault-cluster-public
-       example](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) and want a public domain name (e.g. `vault.example.com`), add that 
-       domain name here too.
-    1. Set the `ip_addresses` to `127.0.0.1`. 
-    1. For production usage, you should take care to protect the private key by encrypting it (see [Using TLS 
-       certs](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert#using-tls-certs) for more info). 
-
-1. Update the `variables` section of the `vault-consul.json` Packer template to specify the AWS region, Vault 
-   version, Consul version, and the paths to the TLS cert files you just generated. 
-
-1. Run `packer build vault-consul.json`.
-
-When the build finishes, it will output the IDs of the new AMIs. To see how to deploy one of these AMIs, check out the 
-[vault-cluster-private](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-private) and [vault-cluster-public](https://github.com/hashicorp/terraform-aws-vault/tree/master/examples/vault-cluster-public) 
-examples.
-
-
-
-
-## Creating your own Packer template for production usage
-
-When creating your own Packer template for production usage, you can copy the example in this folder more or less 
-exactly, except for one change: we recommend replacing the `file` provisioner with a call to `git clone` in the `shell` 
-provisioner. Instead of:
-
-```json
-{
-  "provisioners": [{
-    "type": "file",
-    "source": "{{template_dir}}/../../../terraform-aws-vault",
-    "destination": "/tmp"
-  },{
-    "type": "shell",
-    "inline": [
-      "/tmp/terraform-aws-vault/modules/install-vault/install-vault --version {{user `vault_version`}}"
-    ],
-    "pause_before": "30s"
-  }]
-}
+## Directory Listing
+```
+├── base.json		// [NEW] template used to drive packer to create the AMI(s).
+├── ic			   // [NEW] folder containing instant client, which is uploaded to the image
+│   ├── instantclient-basic-linux.x64-12.2.0.1.0.zip
+│   └── instantclient-sdk-linux.x64-12.2.0.1.0.zip
+├── README.md
+├── scripts		  // [NEW]
+│   ├── build.sh	 // build script to initiate the packer build
+│   └── common.sh	//  - compares the SHA image against SHA of this git repository, to determine if (re)build is needed
+├── tasks		    // borrowed from Gruntworks
+│   ├── baseline.sh
+│   ├── cleanup.sh
+│   └── debug.sh
+├── tls			   // folder containing TLS certificate(s), generated by executing the module "private-tls-cert"
+│   ├── ca.crt.pem
+│   ├── README.md
+│   ├── vault.crt.pem
+│   └── vault.key.pem
 ```
 
-Your code should look more like this:
+## Pre-requisites
+### Create a local CA Cert & Keys
+* [private-tls-cert](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/private-tls-cert): Generate a private TLS certificate for use with a private Vault cluster. This is done to ensure that we need to accept the ca cert only once, and subsequent integration with the Vault does not warn for https.
 
-```json
-{
-  "provisioners": [{
-    "type": "shell",
-    "inline": [
-      "git clone --branch <MODULE_VERSION> https://github.com/hashicorp/terraform-aws-vault.git /tmp/terraform-aws-vault",
-      "/tmp/terraform-aws-vault/modules/install-vault/install-vault --version {{user `vault_version`}}"
-    ],
-    "pause_before": "30s"
-  }]
-}
+  Store the generated certs and keys on _**local**_ file system.
+  for this example, these certs are stored at _**tls**_ sub directory.
+
+ **TBD**: Avoid this, and automate generation of ca auth and signed certs after image creation. That would avoid having to create the certs offline first. Perhaps store the certs in Vault.
+
+all the builds and development is done ubuntu bash shell running on windows 10 natively using Atom Editor - ** yay! **
+
+### _**Packer Image**_  (with Vault/Consul and Oracle Instant Client) _, How it is built ?_
+
+Steps executed are as below for building the packer image
+
+
 ```
+  update packer.ignore file with keys et. al.
+  $ cd examples
+  $ vault-consul-ami\scripts\build.sh vault-consul-ami base packer.ignore
+  ```
+  Build script above takes three parameters
 
-You should replace `<MODULE_VERSION>` in the code above with the version of this module that you want to use (see
-the [Releases Page](https://github.com/hashicorp/terraform-aws-vault/releases) for all available versions). That's because for production usage, you should always
-use a fixed, known version of this Module, downloaded from the official Git repo. On the other hand, when you're 
-just experimenting with the Module, it's OK to use a local checkout of the Module, uploaded from your own 
-computer.
+
+  (1) Directory to compare the SHA signature from, this directory should contain all the configuration files for the packer build.
+  In above example it is vault-consul-ami
+
+
+  (2) Name of the image as json file. IN above example it is `base[.json]`
+
+
+  (3) `packer.ignore` file *(yup, you need your own credentials ;)* contains all secrets such aws keys et. al. packer.ignore contents look like below
+
+  ```
+  {
+  "aws_access_key_id" : "XXXXXXXXXXXXXXXX",
+  "aws_secret_access_key" : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "github_oauth_token" : "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "region" : "us-east-1",
+  "vault_version": "0.9.3",
+  "vault_module_version": "master",
+  "consul_module_version": "master",
+  "consul_version": "1.0.6",
+  "ca_public_key_path": "vault-and-consul/examples/vault-consul-ami/tls/ca.crt.pem",
+  "tls_public_key_path": "vault-and-consul/examples/vault-consul-ami/tls/vault.crt.pem",
+  "tls_private_key_path": "vault-and-consul/examples/vault-consul-ami/tls/vault.key.pem"
+  }
+  ```
+
+ **Generated certs are subsumed into guest OS.**
+
+
+ [update-certificate-store](https://github.com/hashicorp/terraform-aws-vault/tree/master/modules/update-certificate-store): Add a trusted, CA public key to an OS's certificate store. This allows you to establish TLS connections to services that use this TLS certs signed by this CA without getting x509 certificate errors.
+
+
+** Image is built, Image is time-stamped, versioned and certs are transferred over. **
+
+Uses a
+ [Packer](https://www.packer.io/) template to create a Vault
+ [Amazon Machine Image (AMI)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html), and
+ [Ubuntu16 Machine Image (AMI)](https://aws.amazon.com/marketplace/pp/B01JBL2M0O).
+ Both the images are provided same suffix based on the timestamp the image was created.
+ Image has the tag containing SHA generated from `git` repository as an integrity marker.
+
+ AMI Image integrity is determined by comparing the computed ``git SHA`` *-vis-a-vis-* ``SHA`` tag on AMI image.
+
+
+**Image pulls & installs vault and consul from github ** (https://github.com/analyzeaws/vault-and-consul)
+
+
+ [install-vault](https://github.com/analyzeaws/vault-and-consul/tree/master/modules/install-vault):
+  Packer template itself rebuilds every time there is change to git repository containing the packing information for the AMI.
