@@ -21,7 +21,7 @@ resource "aws_internet_gateway" "internet_gateway" {
   vpc_id = "${aws_vpc.vpc.id}"
 
   tags {
-    Name        = "${var.environment}-internet-gateway"
+    Name        = "${var.environment}-igw"
     Environment = "${var.environment}"
   }
 }
@@ -35,7 +35,7 @@ resource "aws_route_table" "public_routetable" {
   }
 
   tags {
-    Name        = "${var.environment}-public-routetable"
+    Name        = "${var.environment}-public-rt"
     Environment = "${var.environment}"
   }
 }
@@ -69,7 +69,7 @@ resource "aws_route_table" "private_routetable" {
   }
 
   tags {
-    Name        = "${var.environment}-private-routetable"
+    Name        = "${var.environment}-private-rt"
     Environment = "${var.environment}"
   }
 }

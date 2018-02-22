@@ -3,6 +3,11 @@ output "vpc_id" {
   value       = "${aws_vpc.vpc.id}"
 }
 
+output "vpc_tags" {
+  description = "The tags used for the VPC."
+  value       = "${aws_vpc.vpc.tags}"
+}
+
 output "vpc_cidr" {
   description = "The CDIR block used for the VPC."
   value       = "${aws_vpc.vpc.cidr_block}"

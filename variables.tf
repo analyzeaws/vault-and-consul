@@ -49,12 +49,11 @@ variable "vpc_tags" {
 
 variable "use_default_vpc" {
   description = "Whether to use the default VPC - NOT recommended for production! - should more likely change this to false and use the vpc_tags to find your vpc"
-  default     = true
+  default     = false
 }
 
 variable "aws_region" {
   description = "The AWS region to deploy into (e.g. us-east-1)."
-  default     = "us-east-1"
 }
 
 variable "vault_cluster_name" {

@@ -9,6 +9,18 @@ provider "aws" {
   region = "${var.aws_region}"
 }
 
+#----------------------------------------------------------------------------------------------------------------------
+# create a non default VPC, with public and private subnet, spanning AZ's
+#----------------------------------------------------------------------------------------------------------------------
+module "vpc" {
+  source = "modules/aws-vpc"
+  environment= "vault-consul"
+
+  availability_zones = {
+    us-east-1 = ["us-east-1a", "us-east-1b", "us-east-1c"]
+  }
+}
+
 # Terraform 0.9.5 suffered from https://github.com/hashicorp/terraform/issues/14399, which causes this template the
 # conditionals in this template to fail.
 terraform {
