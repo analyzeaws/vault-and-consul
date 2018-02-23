@@ -14,6 +14,7 @@ provider "aws" {
 #----------------------------------------------------------------------------------------------------------------------
 module "vpc" {
   source = "modules/aws-vpc"
+  aws_region = "${var.aws_region}"
   environment= "vault-consul"
 
   availability_zones = {
@@ -76,7 +77,9 @@ module "vault_cluster" {
   user_data = "${data.template_file.user_data_vault_cluster.rendered}"
 
   vpc_id     = "${data.aws_vpc.default.id}"
-  subnet_ids = "${data.aws_subnet_ids.default.ids}"
+
+  #subnet_ids = "${data.aws_subnet_ids.default.ids}"
+  subnet_ids = "${module.vpc.public_subnets}"
 
   # Tell each Vault server to register in the ELB.
   load_balancers = ["${module.vault_elb.load_balancer_name}"]
@@ -134,7 +137,8 @@ module "vault_elb" {
   name = "${var.vault_cluster_name}"
 
   vpc_id     = "${data.aws_vpc.default.id}"
-  subnet_ids = "${data.aws_subnet_ids.default.ids}"
+  #subnet_ids = "${data.aws_subnet_ids.default.ids}"
+  subnet_ids = "${module.vpc.public_subnets}"
 
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
@@ -178,7 +182,8 @@ module "consul_cluster" {
   user_data = "${data.template_file.user_data_consul.rendered}"
 
   vpc_id     = "${data.aws_vpc.default.id}"
-  subnet_ids = "${data.aws_subnet_ids.default.ids}"
+  #subnet_ids = "${data.aws_subnet_ids.default.ids}"
+  subnet_ids = "${module.vpc.public_subnets}"
 
   # To make testing easier, we allow Consul and SSH requests from any IP address here but in a production
   # deployment, we strongly recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
@@ -211,10 +216,11 @@ data "template_file" "user_data_consul" {
 
 data "aws_vpc" "default" {
   default = "${var.use_default_vpc}"
-  tags    = "${var.vpc_tags}"
+  #tags    = "${var.vpc_tags}"
+  tags     = "${module.vpc.vpc_tags}"
 }
 
-data "aws_subnet_ids" "default" {
+data "aws_subnet_ids" "default" { # deploy to public subnet in custom VPC only
   vpc_id = "${data.aws_vpc.default.id}"
-  tags   = "${var.subnet_tags}"
+  tags   =  "${module.vpc.public_subnet_tags}"
 }

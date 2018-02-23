@@ -5,8 +5,10 @@ region = "${var.aws_region}"
 }
 
 data "aws_vpc" "default" {
-  default = true
+default = "${var.use_default_vpc}"
+tags     = "${module.vpc.vpc_tags}"
 }
+
 
 # -------- Commented for integrated use with vault-consul
 */
@@ -62,7 +64,8 @@ module "db" {
   }
 
   # DB subnet group
-  subnet_ids = ["${data.aws_subnet_ids.all.ids}"]
+  #subnet_ids = ["${data.aws_subnet_ids.all.ids}"]
+  subnet_ids = "${module.vpc.public_subnets}"
 
   # DB parameter group
   family = "oracle-se2-12.1"

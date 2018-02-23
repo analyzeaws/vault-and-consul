@@ -54,6 +54,7 @@ variable "use_default_vpc" {
 
 variable "aws_region" {
   description = "The AWS region to deploy into (e.g. us-east-1)."
+  default = "us-east-1"
 }
 
 variable "vault_cluster_name" {
