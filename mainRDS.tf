@@ -60,11 +60,12 @@ module "db" {
 
   tags = {
     Owner       = "Deepak for Hashicorp"
-    Environment = "dev"
+    Environment = "dev datbase"
   }
 
   # DB subnet group
   #subnet_ids = ["${data.aws_subnet_ids.all.ids}"]
+  # TBD, move this into private subnet
   subnet_ids = "${module.vpc.public_subnets}"
 
   # DB parameter group
