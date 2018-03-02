@@ -26,6 +26,42 @@ resource "aws_internet_gateway" "internet_gateway" {
   }
 }
 
+# create routetable, and re-use across for all db subnets
+resource "aws_route_table" "db_routetable" {
+  count  = "${var.create_db_subnets ? 1) : 0}"
+  vpc_id = "${aws_vpc.vpc.id}"
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.internet_gateway.id}"
+  }
+
+  tags {
+    Name        = "${var.environment}-db-rt"
+    Environment = "${var.environment}"
+  }
+}
+
+resource "aws_subnet" "db_subnet" {
+  count                   = "${var.create_db_subnets ? length(var.availability_zones[var.aws_region]) : 0}"
+  vpc_id                  = "${aws_vpc.vpc.id}"
+  cidr_block              = "${cidrsubnet(var.cidr_block, 8, count.index)}"
+  availability_zone       = "${element(var.availability_zones[var.aws_region], count.index)}"
+   # production: remove, since we do not want DB subnet to be reachable from net
+  map_public_ip_on_launch = "${var.db_subnet_map_db_ip_on_launch}"
+
+  tags {
+    Name        = "${var.environment}-${element(var.availability_zones[var.aws_region], count.index)}-db"
+    Environment = "${var.environment}"
+  }
+}
+
+resource "aws_route_table_association" "db_routing_table" {
+  count          = "${var.create_db_subnets ? length(var.availability_zones[var.aws_region]) : 0}"
+  subnet_id      = "${element(aws_subnet.db_subnet.*.id, count.index)}"
+  route_table_id = "${aws_route_table.db_routetable.id}"
+}
+
 resource "aws_route_table" "public_routetable" {
   vpc_id = "${aws_vpc.vpc.id}"
 

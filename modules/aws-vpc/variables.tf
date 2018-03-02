@@ -1,7 +1,6 @@
 variable "environment" {
   description = "A logical name that will be used as prefix and tag for the created resources."
   type        = "string"
-  default     = "vault-consul"
 }
 
 variable "aws_region" {
@@ -36,6 +35,11 @@ variable "availability_zones" {
   }
 }
 
+variable "create_db_subnets" {
+  description = "If true create a DB subnet for each availability zone including a NAT gateway."
+  default     = "true"
+}
+
 variable "create_private_subnets" {
   description = "If true create a private subnet for each availability zone including a NAT gateway."
   default     = "true"
@@ -48,5 +52,10 @@ variable "create_private_hosted_zone" {
 
 variable "public_subnet_map_public_ip_on_launch" {
   description = "Set the default behavior for instances created in the VPC. If true by default a public ip will be assigned."
+  default     = "true"
+}
+
+variable "db_subnet_map_db_ip_on_launch" {
+  description = "Set the default behavior for DB instances created in the VPC. If true by default a public ip will be assigned."
   default     = "true"
 }

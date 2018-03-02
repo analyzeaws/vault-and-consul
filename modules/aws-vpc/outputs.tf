@@ -13,9 +13,19 @@ output "vpc_cidr" {
   value       = "${aws_vpc.vpc.cidr_block}"
 }
 
+output "db_subnet_tags" {
+  description = "A list of tags DB subnets."
+  value       = ["${aws_subnet.db_subnet.*.tags}"]
+}
+
 output "public_subnet_tags" {
   description = "A list of tags public subnets."
   value       = ["${aws_subnet.public_subnet.*.tags}"]
+}
+
+output "db_subnets" {
+  description = "A list of the DB subnets."
+  value       = ["${aws_subnet.db_subnet.*.id}"]
 }
 
 output "public_subnets" {

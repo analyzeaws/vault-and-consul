@@ -74,11 +74,14 @@ module "vault_cluster" {
   instance_type = "${var.vault_instance_type}"
 
   ami_id    = "${var.ami_id == "" ? data.aws_ami.vault_consul.image_id : var.ami_id}"
+
+  # primary used to select the vault binary and uploaded certs to start vault with
   user_data = "${data.template_file.user_data_vault_cluster.rendered}"
 
   vpc_id     = "${data.aws_vpc.default.id}"
 
   #subnet_ids = "${data.aws_subnet_ids.default.ids}"
+  # changed to explicitly use ALL the public subnet(s) on the created VPC
   subnet_ids = "${module.vpc.public_subnets}"
 
   # Tell each Vault server to register in the ELB.
@@ -90,7 +93,8 @@ module "vault_cluster" {
 
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
-
+  # production: limit this to set of known address(s) only
+  
   allowed_ssh_cidr_blocks            = ["0.0.0.0/0"]
   allowed_inbound_cidr_blocks        = ["0.0.0.0/0"]
   allowed_inbound_security_group_ids = []
@@ -104,7 +108,9 @@ module "vault_cluster" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_iam_policies_servers" {
-  source = "github.com/hashicorp/terraform-aws-consul//modules/consul-iam-policies?ref=v0.0.2"
+  #source = "github.com/hashicorp/terraform-aws-consul//modules/consul-iam-policies?ref=v0.0.2"
+  # Changed to use local policy version
+  source = "modules/vault-cluster/consul-iam-policies"
 
   iam_role_id = "${module.vault_cluster.iam_role_id}"
 }
@@ -138,7 +144,9 @@ module "vault_elb" {
 
   vpc_id     = "${data.aws_vpc.default.id}"
   #subnet_ids = "${data.aws_subnet_ids.default.ids}"
+  # changed to explicitly use ALL the public subnet(s) on the created VPC
   subnet_ids = "${module.vpc.public_subnets}"
+
 
   # To make testing easier, we allow requests from any IP address here but in a production deployment, we *strongly*
   # recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
@@ -168,7 +176,9 @@ data "aws_route53_zone" "selected" {
 # ---------------------------------------------------------------------------------------------------------------------
 
 module "consul_cluster" {
-  source = "github.com/hashicorp/terraform-aws-consul//modules/consul-cluster?ref=v0.0.2"
+  #source = "github.com/hashicorp/terraform-aws-consul//modules/consul-cluster?ref=v0.0.2"
+  #changed to use local pulled down version
+  source = "modules/consul-cluster"
 
   cluster_name  = "${var.consul_cluster_name}"
   cluster_size  = "${var.consul_cluster_size}"
@@ -183,7 +193,8 @@ module "consul_cluster" {
 
   vpc_id     = "${data.aws_vpc.default.id}"
   #subnet_ids = "${data.aws_subnet_ids.default.ids}"
-  subnet_ids = "${module.vpc.public_subnets}"
+  # changed to explicitly use ALL the private subnet(s) on the created VPC
+  subnet_ids = "${module.vpc.private_subnets}"
 
   # To make testing easier, we allow Consul and SSH requests from any IP address here but in a production
   # deployment, we strongly recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
@@ -217,10 +228,17 @@ data "template_file" "user_data_consul" {
 data "aws_vpc" "default" {
   default = "${var.use_default_vpc}"
   #tags    = "${var.vpc_tags}"
+  # changed, to not to use default VPC, but use the VPC ID from the created VPC
   tags     = "${module.vpc.vpc_tags}"
 }
 
+# -- commented out, using non default VPC --
+/*
+ *********************************************************************************
 data "aws_subnet_ids" "default" { # deploy to public subnet in custom VPC only
   vpc_id = "${data.aws_vpc.default.id}"
+  # changed, to not to use default subnet, but use the public subnet attached to the created VPC
   tags   =  "${module.vpc.public_subnet_tags}"
 }
+*********************************************************************************
+*/

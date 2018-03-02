@@ -6,9 +6,8 @@ region = "${var.aws_region}"
 
 data "aws_vpc" "default" {
 default = "${var.use_default_vpc}"
-tags     = "${module.vpc.vpc_tags}"
+tags    = "${module.vpc.vpc_tags}"
 }
-
 
 # -------- Commented for integrated use with vault-consul
 */
@@ -20,10 +19,13 @@ tags     = "${module.vpc.vpc_tags}"
 ##############################################################
 # need to ensure that default vpc group allows oracle tns listener port connection, default 1521
 ##############################################################
+## Commented out ***
 data "aws_subnet_ids" "all" {
   vpc_id = "${data.aws_vpc.default.id}"
 }
+## ***
 
+# Get the security group to assign to RDS instance
 data "aws_security_group" "default" {
   vpc_id = "${data.aws_vpc.default.id}"
   name   = "default"
@@ -65,8 +67,8 @@ module "db" {
 
   # DB subnet group
   #subnet_ids = ["${data.aws_subnet_ids.all.ids}"]
-  # TBD, move this into private subnet
-  subnet_ids = "${module.vpc.public_subnets}"
+  # production, move this into private subnet
+  subnet_ids = "${module.vpc.db_subnets}"
 
   # DB parameter group
   family = "oracle-se2-12.1"

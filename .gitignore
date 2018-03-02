@@ -13,3 +13,4 @@
 *.ignore 
 ignore/
 */ignore/
+/circle.yml
