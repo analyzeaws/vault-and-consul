@@ -110,7 +110,7 @@ module "vault_cluster" {
 module "consul_iam_policies_servers" {
   #source = "github.com/hashicorp/terraform-aws-consul//modules/consul-iam-policies?ref=v0.0.2"
   # Changed to use local policy version
-  source = "modules/vault-cluster/consul-iam-policies"
+  source = "modules/consul-iam-policies"
 
   iam_role_id = "${module.vault_cluster.iam_role_id}"
 }
