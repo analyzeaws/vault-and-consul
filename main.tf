@@ -20,6 +20,7 @@ module "vpc" {
   availability_zones = {
     us-east-1 = ["us-east-1a", "us-east-1b", "us-east-1c"]
   }
+
 }
 
 # Terraform 0.9.5 suffered from https://github.com/hashicorp/terraform/issues/14399, which causes this template the
@@ -200,6 +201,8 @@ module "consul_cluster" {
   # deployment, we strongly recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
 
   allowed_ssh_cidr_blocks     = ["0.0.0.0/0"]
+  
+  # TBD, change this to allow only vault to talk to consul 
   allowed_inbound_cidr_blocks = ["0.0.0.0/0"]
   ssh_key_name                = "${var.ssh_key_name}"
 }

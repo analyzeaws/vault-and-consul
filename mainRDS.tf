@@ -1,5 +1,6 @@
 # -------- Commented for integrated use with vault-consul
 /*
+***********************************************************
 provider "aws" {
 region = "${var.aws_region}"
 }
@@ -8,9 +9,10 @@ data "aws_vpc" "default" {
 default = "${var.use_default_vpc}"
 tags    = "${module.vpc.vpc_tags}"
 }
-
-# -------- Commented for integrated use with vault-consul
+************************************************************
 */
+# -------- Commented for integrated use with vault-consul
+
 ##############################################################
 # Data sources to get VPC, subnets and security group details
 ##############################################################
@@ -19,17 +21,37 @@ tags    = "${module.vpc.vpc_tags}"
 ##############################################################
 # need to ensure that default vpc group allows oracle tns listener port connection, default 1521
 ##############################################################
-## Commented out ***
+
+/* commented out 
+***********************************************************
 data "aws_subnet_ids" "all" {
   vpc_id = "${data.aws_vpc.default.id}"
 }
+
+
+data "aws_vpc" "vpc" {
+tags    = "${module.vpc.vpc_tags}"
+name = "${module.vpc.vpc_tags[environment]}"
+}
+***********************************************************
+*/
 ## ***
 
-# Get the security group to assign to RDS instance
-data "aws_security_group" "default" {
-  vpc_id = "${data.aws_vpc.default.id}"
-  name   = "default"
+locals {
+  sg_name = "${module.vpc.name}-db-sg"
 }
+# Create an independent security group to assign to RDS instance
+resource "aws_security_group" "db" {
+
+  name = "${local.sg_name}"
+  description = "Security group for the ${local.sg_name}"
+  vpc_id      = "${module.vpc.vpc_id}"
+  tags {
+    Name        = "${local.sg_name}"
+    Environment = "${local.sg_name}"
+  }
+}
+
 
 #####
 # DB
@@ -53,7 +75,7 @@ module "db" {
   port                                = "1521"
   iam_database_authentication_enabled = false
 
-  vpc_security_group_ids = ["${data.aws_security_group.default.id}"]
+  vpc_security_group_ids = ["${aws_security_group.db.id}"]
   maintenance_window     = "Mon:00:00-Mon:03:00"
   backup_window          = "03:00-06:00"
 
@@ -65,6 +87,9 @@ module "db" {
     Environment = "dev datbase"
   }
 
+  # since we have three subnets in three Az's enable the multi AZ 
+  multi_az = true 
+  
   # DB subnet group
   #subnet_ids = ["${data.aws_subnet_ids.all.ids}"]
   # production, move this into private subnet

@@ -59,3 +59,18 @@ variable "db_subnet_map_db_ip_on_launch" {
   description = "Set the default behavior for DB instances created in the VPC. If true by default a public ip will be assigned."
   default     = "true"
 }
+
+variable "db_subnet_name" {
+  description = "name of the DB subnet"
+  default     = "DB_Subnet"
+}
+
+variable "public_subnet_name" {
+  description = "name of the public subnet"
+  default     = "Public_Subnet"
+}
+
+variable "private_subnet_name" {
+  description = "name of the Private subnet"
+  default     = "Private_Subnet"
+}

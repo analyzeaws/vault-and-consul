@@ -28,7 +28,7 @@ resource "aws_internet_gateway" "internet_gateway" {
 
 # create routetable, and re-use across for all db subnets
 resource "aws_route_table" "db_routetable" {
-  count  = "${var.create_db_subnets ? 1) : 0}"
+  count  = "${var.create_db_subnets ? 1 : 0}"
   vpc_id = "${aws_vpc.vpc.id}"
 
   route {
@@ -51,7 +51,7 @@ resource "aws_subnet" "db_subnet" {
   map_public_ip_on_launch = "${var.db_subnet_map_db_ip_on_launch}"
 
   tags {
-    Name        = "${var.environment}-${element(var.availability_zones[var.aws_region], count.index)}-db"
+    Name        = "${var.db_subnet_name}-${element(var.availability_zones[var.aws_region], count.index)}-db"
     Environment = "${var.environment}"
   }
 }
@@ -78,13 +78,13 @@ resource "aws_route_table" "public_routetable" {
 
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = "${aws_vpc.vpc.id}"
-  cidr_block              = "${cidrsubnet(var.cidr_block, 8, count.index)}"
+  cidr_block              = "${cidrsubnet(var.cidr_block, 8, length(var.availability_zones[var.aws_region])+count.index)}"
   availability_zone       = "${element(var.availability_zones[var.aws_region], count.index)}"
   map_public_ip_on_launch = "${var.public_subnet_map_public_ip_on_launch}"
   count                   = "${length(var.availability_zones[var.aws_region])}"
 
   tags {
-    Name        = "${var.environment}-${element(var.availability_zones[var.aws_region], count.index)}-public"
+    Name        = "${var.public_subnet_name}-${element(var.availability_zones[var.aws_region], count.index)}-public"
     Environment = "${var.environment}"
   }
 }
@@ -112,13 +112,13 @@ resource "aws_route_table" "private_routetable" {
 
 resource "aws_subnet" "private_subnet" {
   vpc_id                  = "${aws_vpc.vpc.id}"
-  cidr_block              = "${cidrsubnet(var.cidr_block, 8, length(var.availability_zones[var.aws_region]) + count.index)}"
+  cidr_block              = "${cidrsubnet(var.cidr_block, 8, length(var.availability_zones[var.aws_region])*2 + count.index)}"
   availability_zone       = "${element(var.availability_zones[var.aws_region], count.index)}"
   map_public_ip_on_launch = false
   count                   = "${var.create_private_subnets ? length(var.availability_zones[var.aws_region]) : 0}"
 
   tags {
-    Name        = "${var.environment}-${element(var.availability_zones[var.aws_region], count.index)}-private"
+    Name        = "${var.private_subnet_name}-${element(var.availability_zones[var.aws_region], count.index)}-private"
     Environment = "${var.environment}"
   }
 }
