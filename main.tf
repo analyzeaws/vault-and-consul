@@ -79,7 +79,7 @@ module "vault_cluster" {
   # primary used to select the vault binary and uploaded certs to start vault with
   user_data = "${data.template_file.user_data_vault_cluster.rendered}"
 
-  vpc_id     = "${data.aws_vpc.default.id}"
+  vpc_id     = "${data.aws_vpc.vault_consul.id}"
 
   #subnet_ids = "${data.aws_subnet_ids.default.ids}"
   # changed to explicitly use ALL the public subnet(s) on the created VPC
@@ -143,7 +143,7 @@ module "vault_elb" {
 
   name = "${var.vault_cluster_name}"
 
-  vpc_id     = "${data.aws_vpc.default.id}"
+  vpc_id     = "${data.aws_vpc.vault_consul.id}"
   #subnet_ids = "${data.aws_subnet_ids.default.ids}"
   # changed to explicitly use ALL the public subnet(s) on the created VPC
   subnet_ids = "${module.vpc.public_subnets}"
@@ -159,7 +159,7 @@ module "vault_elb" {
   # Terraform conditionals are not short-circuiting, so we use join as a workaround to avoid errors when the
   # aws_route53_zone data source isn't actually set: https://github.com/hashicorp/hil/issues/50
   #hosted_zone_id = "${var.create_dns_entry ? join("", data.aws_route53_zone.selected.*.zone_id) : ""}"
-  hosted_zone_id = "/hostedzone/ZKPSVQ6E5P27V"
+  hosted_zone_id = "${var.hosted_zone_domain_name}"
 
   domain_name = "${var.vault_domain_name}"
 }
@@ -192,7 +192,7 @@ module "consul_cluster" {
   ami_id    = "${var.ami_id == "" ? data.aws_ami.vault_consul.image_id : var.ami_id}"
   user_data = "${data.template_file.user_data_consul.rendered}"
 
-  vpc_id     = "${data.aws_vpc.default.id}"
+  vpc_id     = "${data.aws_vpc.vault_consul.id}"
   #subnet_ids = "${data.aws_subnet_ids.default.ids}"
   # changed to explicitly use ALL the private subnet(s) on the created VPC
   subnet_ids = "${module.vpc.private_subnets}"
@@ -200,6 +200,7 @@ module "consul_cluster" {
   # To make testing easier, we allow Consul and SSH requests from any IP address here but in a production
   # deployment, we strongly recommend you limit this to the IP address ranges of known, trusted servers inside your VPC.
 
+  # TBD, change this to allow only vault to talk to consul 
   allowed_ssh_cidr_blocks     = ["0.0.0.0/0"]
   
   # TBD, change this to allow only vault to talk to consul 
@@ -228,20 +229,10 @@ data "template_file" "user_data_consul" {
 # and private subnets. Only the ELB should run in the public subnets.
 # ---------------------------------------------------------------------------------------------------------------------
 
-data "aws_vpc" "default" {
+data "aws_vpc" "vault_consul" {
   default = "${var.use_default_vpc}"
   #tags    = "${var.vpc_tags}"
   # changed, to not to use default VPC, but use the VPC ID from the created VPC
   tags     = "${module.vpc.vpc_tags}"
 }
 
-# -- commented out, using non default VPC --
-/*
- *********************************************************************************
-data "aws_subnet_ids" "default" { # deploy to public subnet in custom VPC only
-  vpc_id = "${data.aws_vpc.default.id}"
-  # changed, to not to use default subnet, but use the public subnet attached to the created VPC
-  tags   =  "${module.vpc.public_subnet_tags}"
-}
-*********************************************************************************
-*/

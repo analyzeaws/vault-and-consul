@@ -52,6 +52,26 @@ resource "aws_security_group" "db" {
   }
 }
 
+resource "aws_security_group_rule" "allow_all_inbound" {
+  type        = "ingress"
+  from_port   = "0"
+  to_port     = "1521"
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = "${aws_security_group.db.id}"
+}
+
+resource "aws_security_group_rule" "allow_all_outbound" {
+  type        = "egress"
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = "${aws_security_group.db.id}"
+}
+
 
 #####
 # DB
