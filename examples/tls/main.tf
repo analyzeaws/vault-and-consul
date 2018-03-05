@@ -19,5 +19,9 @@ module "tls" {
  common_name="Analyze AWS Certificate"
  dns_names=["vault.analyzeaws.com","vault.service.consul"]
  ip_addresses = ["127.0.0.1" ]
+ client_common_name="Vault Client"
+ client_dns_names=["localhost","client.analyzeaws.com","client.service.consul"]
+ client_ip_addresses = ["127.0.0.1" ]
+ client_organization_name="TheClient"
 validity_period_hours=8760
 }

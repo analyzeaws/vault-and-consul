@@ -61,28 +61,6 @@ connection_url="hshcrp/hashicorp@//hshcrpdb.c0ukynotdvav.us-east-1.rds.amazonaws
 vault write database/roles/hshCreate \
 db_name="HSHCRPDB" \
 creation_statements="CREATE USER {{name}} IDENTIFIED BY {{password}} DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP; \
-GRANT SELECT ANY TABLE TO {{name}} ; \
-GRANT CREATE ROLE TO {{name}} ; \
-GRANT CREATE LIBRARY TO {{name}} ; \
-GRANT CREATE TRIGGER TO {{name}} ; \
-GRANT DEBUG CONNECT SESSION TO {{name}} ; \
-GRANT CREATE MATERIALIZED VIEW TO {{name}} ; \
-GRANT CREATE INDEXTYPE TO {{name}} ; \
-GRANT CREATE VIEW TO {{name}} ; \
-GRANT CREATE SESSION TO {{name}} ; \
-GRANT BECOME USER TO {{name}} ; \
-GRANT CREATE TABLE TO {{name}} ; \
-GRANT CREATE TYPE TO {{name}} ; \
-GRANT QUERY REWRITE TO {{name}} ; \
-GRANT CREATE PUBLIC SYNONYM TO {{name}} ; \
-GRANT GLOBAL QUERY REWRITE TO {{name}} ; \
-GRANT CREATE SYNONYM TO {{name}} ; \
-GRANT CREATE SEQUENCE TO {{name}} ; \
-GRANT CREATE USER TO {{name}} ; \
-GRANT DROP PUBLIC SYNONYM TO {{name}} ; \
-GRANT DROP USER TO {{name}} ; \
-GRANT FORCE TRANSACTION TO {{name}} ; \
-GRANT CREATE PROCEDURE TO {{name}} " \
 default_ttl="1h" \
 max_ttl="24h"
 

@@ -49,6 +49,24 @@ variable "ip_addresses" {
   type        = "list"
 }
 
+variable "client_common_name" {
+  description = "The common name to use in the subject of the client certificate (e.g. acme.co cert)."
+}
+
+variable "client_dns_names" {
+  description = "List of DNS names for which the client certificate will be valid (e.g. vault.service.consul, foo.example.com)."
+  type        = "list"
+}
+
+variable "client_ip_addresses" {
+  description = "List of IP addresses for which the client certificate will be valid (e.g. 127.0.0.1)."
+  type        = "list"
+}
+
+variable "client_organization_name" {
+  description = "Client Org Name"
+}
+
 variable "validity_period_hours" {
   description = "The number of hours after initial issuing that the certificate will become invalid."
 }

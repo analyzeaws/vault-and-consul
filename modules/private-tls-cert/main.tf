@@ -100,12 +100,12 @@ resource "tls_cert_request" "client_cert" {
   key_algorithm   = "${tls_private_key.client_cert.algorithm}"
   private_key_pem = "${tls_private_key.client_cert.private_key_pem}"
 
-  dns_names    = ["${var.dns_names}"]
-  ip_addresses = ["${var.ip_addresses}"]
+  dns_names    = ["${var.client_dns_names}"]
+  ip_addresses = ["${var.client_ip_addresses}"]
 
   subject {
-    common_name  = "${var.common_name}"
-    organization = "${var.organization_name}"
+    common_name  = "${var.client_common_name}"
+    organization = "${var.client_organization_name}"
   }
 }
 
