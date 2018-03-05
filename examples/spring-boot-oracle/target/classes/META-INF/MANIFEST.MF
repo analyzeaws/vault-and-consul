@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Implementation-Title: Spring Cloud Vault Config for MySQL
+Implementation-Version: 1.0.0.BUILD-SNAPSHOT
+Built-By: deepa
+Implementation-Vendor-Id: org.springframework.cloud.vault.examples
+Build-Jdk: 1.8.0_161
+Implementation-URL: https://projects.spring.io/spring-boot/spring-boot
+ -starter-parent/spring-cloud-vault-examples/spring-cloud-vault-config
+ -mysql-example/
+Created-By: Maven Integration for Eclipse
+

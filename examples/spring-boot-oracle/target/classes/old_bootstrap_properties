@@ -1,0 +1,19 @@
+spring.application.name=my-spring-boot-app
+spring.cloud.vault.ssl.trust-store=file:../../work/keystore.jks
+
+spring.cloud.vault.token=00000000-0000-0000-0000-000000000000
+# TBD check which one of the below works, database or oracle ? 
+spring.cloud.vault.database.enabled=true
+spring.cloud.vault.oracle.enabled=true
+
+spring.cloud.vault.database.role=readOnly
+spring.cloud.vault.oracle.role=readOnly
+
+
+# TBD, change with oracle JDBC URL below , to point to the correct oracle host
+spring.datasource.url=jdbc:oracle:thin:@localhost:1521:HSHCRPDB
+
+logging.level.org=WARN
+logging.level.com=WARN
+
+
