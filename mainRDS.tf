@@ -38,7 +38,7 @@ name = "${module.vpc.vpc_tags[environment]}"
 ## ***
 
 locals {
-  sg_name = "${module.vpc.name}-db-sg"
+  sg_name = "${module.vpc.vpc_tags["Environment"]}-db-sg"
 }
 # Create an independent security group to assign to RDS instance
 resource "aws_security_group" "db" {
